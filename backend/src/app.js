@@ -78,6 +78,7 @@ app.use("/api/v1/deadlines", deadlineRoutes);
 app.use("/api/v1/correction-requests", correctionRoutes);
 app.use("/api/v1/audit-logs", auditRoutes);
 
+
 // Global 404 Route Handler
 app.use((req, res) => {
   res.status(404).json({
