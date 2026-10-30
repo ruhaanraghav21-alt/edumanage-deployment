@@ -4,11 +4,8 @@ const mysql = require("mysql2/promise");
 const config = require("./env");
 
 /**
- * db.js
- *
- * Creates and exports a reusable MySQL connection pool.
- * All database operations across the app must use this pool
- * rather than creating new connections per request.
+ * Creates a reusable MySQL connection pool.
+ * Uses TLS for secure connections to TiDB Cloud.
  */
 
 const pool = mysql.createPool({
@@ -17,6 +14,12 @@ const pool = mysql.createPool({
   user: config.db.user,
   password: config.db.password,
   database: config.db.name,
+
+  // Enable TLS for TiDB Cloud connections
+  ssl: {
+    minVersion: "TLSv1.2",
+  },
+
   connectionLimit: 10,
   waitForConnections: true,
   queueLimit: 0,
