@@ -28,12 +28,6 @@ const deadlineRoutes = require("./modules/deadlines/deadline.routes");
 const correctionRoutes = require("./modules/corrections/correction.routes");
 const auditRoutes = require("./modules/audit/audit.routes");
 
-/**
- * app.js
- *
- * Initializes and configures the Express application.
- */
-
 const app = express();
 
 // CORS middleware
@@ -41,9 +35,11 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
+
   next();
 });
 
@@ -78,6 +74,13 @@ app.use("/api/v1/deadlines", deadlineRoutes);
 app.use("/api/v1/correction-requests", correctionRoutes);
 app.use("/api/v1/audit-logs", auditRoutes);
 
+// Diagnostic route: confirms that the Express app is running
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "EduManage API is running on Vercel",
+  });
+});
 
 // Global 404 Route Handler
 app.use((req, res) => {
@@ -90,7 +93,6 @@ app.use((req, res) => {
 
 // Centralized Error Handler
 app.use((err, req, res, next) => {
-  // Handle JSON parse errors from express.json()
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res.status(400).json({
       success: false,
@@ -99,27 +101,30 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle MySQL duplicate entry error
   if (err.code === "ER_DUP_ENTRY") {
     const isEmail = err.sqlMessage && err.sqlMessage.includes("users.email");
+
     return res.status(409).json({
       success: false,
-      message: isEmail ? "A user with this email already exists" : (err.message || "Duplicate entry detected"),
+      message: isEmail
+        ? "A user with this email already exists"
+        : (err.message || "Duplicate entry detected"),
       data: null,
     });
   }
 
   const statusCode = err.statusCode || err.status || 500;
-  const message = err.statusCode || err.status ? err.message : "An unexpected server error occurred";
+  const message = err.statusCode || err.status
+    ? err.message
+    : "An unexpected server error occurred";
 
-  // Log full error internally for debugging, never send stack traces to client
   if (statusCode >= 500) {
     console.error("[Unhandled Error]:", err);
   }
 
   res.status(statusCode).json({
     success: false,
-    message: message,
+    message,
     data: null,
   });
 });
